@@ -1,0 +1,518 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="test descritpion">
+  <meta name="author" content="summernone">
+  <meta name="keywords" content="">
+  <title>linux权限管理 （1） - summernone</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.4.0/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"www.summernone.github.io","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Summernone</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="linux权限管理 （1）">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2015-02-09 22:33" pubdate>
+        2015年2月9日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      1.7k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      18
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">linux权限管理 （1）</h1>
+            
+            <div class="markdown-body">
+              <h1 id="linux权限管理"><a href="#linux权限管理" class="headerlink" title="linux权限管理"></a>linux权限管理</h1><p>由于现在在开发移动OA的本地沙箱，恰恰又对文件权限这块了解的不多，所以总结下linux权限管理，以备不时之需,权限管理又分为传统管理和扩展管理，该篇先介绍传统管理。<br>##初识权限管理<br>文件被创建它的用户和用户所属组拥有，文件的属主可以设置谁拥有读，写，执行权限，根用户则可以改变任何普通用户的设置。文件一经创建，便可以设定读，写，执行，这三种权限。<br>针对所使用的用户，权限管理又分为三类</p>
+<ul>
+<li>文件属主</li>
+<li>同组用户</li>
+<li>其他用户，不属于属组用户所在组的用户<a id="more"></a>
+
+
+</li>
+</ul>
+<p>可以通过ls命令查看文件或文件夹的权限。</p>
+<p><img src="http://ww3.sinaimg.cn/large/c1ee5447gw1ep14tdm59cj20c400yt8v.jpg" srcset="/img/loading.gif"></p>
+<p>我们关注的是 <strong>-rw-r–r–</strong> ，’-‘代表的是文件类型，</p>
+<ol>
+<li>‘-‘代表的文件类型是普通文件，linux支持的文件类型有7种：<blockquote>
+<p>d 目录。</p>
+</blockquote>
+</li>
+</ol>
+<blockquote>
+<p>l 符号链接(指向另一个文件)。</p>
+<p>s 套接字文件。</p>
+<p>b 块设备文件。</p>
+<p>c 字符设备文件。</p>
+<p>p 命名管道文件。</p>
+<p>- 普通文件，或者更准确地说，不属于以上几种类型的文件。</p>
+</blockquote>
+<p>后面9位份分别对应9个权限位，9个权限位可以分为3组，即前面提到的三种类型：</p>
+<ul>
+<li>rw-:文件属组权限，r为读，w为写，-为执行权限的占位符，意味着没有执行权限。</li>
+<li>r–：中间3位，文件组权限，读，后面两位占位，没有写，执行权限</li>
+<li>r–： 最后三位，其他用户只有读权限</li>
+</ul>
+<p>对于r，w，x权限需要区分文件文件夹来看</p>
+<ol>
+<li>对于文件来说，r是可以对文件内容进行读操作，w可以对文件内容进行更改，x则是可以对文件进行执行操作，也即意味着文件至少是一个可执行脚本。</li>
+<li>对于文件夹来说，r是可以读取文件夹中的文件/文件夹名称，也可以对该文件夹进行搜索。w可以在该文件夹中对文件/文件夹进行创建，删除，转移等操作，而x意味着可以进入该目录（作为工作目录），并且查看内容的权限标记。</li>
+</ol>
+<p>当我们创建文件的时候，系统会使用默认的权限对文件进行初始化，</p>
+<p>可以运行umask命令查看该值：</p>
+<p><img src="http://ww3.sinaimg.cn/large/c1ee5447gw1ep14u3pb5xj208b00twee.jpg" srcset="/img/loading.gif"></p>
+<p>umask值确定了文件创建时的缺省权限，umask修改的是/etc/profile的值，你也可以修改    ~/.profile中的值。</p>
+<p>对于文件来说，后面三个数的最大值为6，文件默认没有执行权限，而目录最大值为7<br>mask值的计算方法是从最高权限中去除的权限，例如上面的默认022，创建文件时，默认权限为文件权限644，，目录则是755。</p>
+<p>##权限操作命令<br>上面已经讲了可以通过 ls命令来查看文件的权限位。<br>你可以通过chmod命令来对已有权限进行更改，可以通过chown命令改变文件属主，也可以通过chgrp修改文件组。</p>
+<p>chmod命令的一般格式为：<br>chmod [who] operator [permission] filename</p>
+<p>who的含义是：</p>
+<p>u 文件属主权限。</p>
+<p>g 同组用户权限。</p>
+<p>o 其他用户权限。</p>
+<p>a 所有用户(文件属主、同组用户及其他用户)。</p>
+<p>operator的含义：<br>+ 增加权限。</p>
+<p>- 取消权限。</p>
+<p>= 设定权限。</p>
+<p>permission的含义：<br>r 读权限。</p>
+<p>w 写权限。</p>
+<p>x 执行权限<br>那么你可以通过下面的命令来对文件权限进行更改</p>
+<p>chmod a-x myfile rw- rw- rw- 收回所有用户的执行权限</p>
+<p>chmod og-w myfile rw- r– r- - 收回同组用户和其他用户的写权限</p>
+<p>上面说的是符号模式，chmod也提供了另外一种模式，即绝对模式来修改，</p>
+<p>chmod  [permisstion] filename</p>
+<p>permisstion就是之前ls 看到的rw-r–r–的翻译，规则是三位一组，可以把rwx看成是一个<br>char x：3的域变量，r就是4，w为2，x为1，那么rw-r–r–翻译过来就是（4+2+0）(4+0+0)(4+0+0)=644.</p>
+<p>这样你可以通过chmod 777 filename 这样的模式给全部用户赋予rwx权限。</p>
+<p>chown命令用来更改文件属组，</p>
+<p>chown user filename</p>
+<p>chgrp可以用来改变文件组，因为一个用户是可以属于多个组的，你可以使用group命令来查看自己属于哪些组。</p>
+<p>##suid/sgid<br>umask输出可以看到值是4位，第一位就是suid/sgid的组合，代表执行该脚本的用户可以拥有与文件属主或组相同的权限。例如，你用test用户登录，想运行passwd修改命令时，passwd命令需要修改/etc/pam.d/passwd （不同发行版本可能不尽相同）</p>
+<blockquote>
+<p>可以通过下面命令查看linux内核版本号：</p>
+</blockquote>
+<blockquote>
+<p><img src="http://ww1.sinaimg.cn/large/c1ee5447gw1ep1q4jb91lj20hw01bwew.jpg" srcset="/img/loading.gif"></p>
+</blockquote>
+<blockquote>
+<p>也可以这样：</p>
+</blockquote>
+<blockquote>
+<p><img src="http://ww2.sinaimg.cn/large/c1ee5447gw1ep1q59tnyij20hv01pgmb.jpg" srcset="/img/loading.gif"></p>
+</blockquote>
+<blockquote>
+<p>如果想看发行版本号，还可以通过 lsb_release命令查看，在符号lsb规范的众多linux发行版&gt;上可以使用，但也有一些例外，就像readhet，可以通过下面的命令查看</p>
+</blockquote>
+<blockquote>
+<p><img src="http://ww1.sinaimg.cn/large/c1ee5447gw1ep1q71axo2j20hs02bwey.jpg" srcset="/img/loading.gif"></p>
+</blockquote>
+<p>回到修改密码命令，可以知道操作密码文件的passwd工具是只能由root或具有root权限的用户修改的，但是管理员又不可能给每个用户开放开放最高权限，而这时，suid/guid就起作用了，即使你不是root用户，但是你在执行该文件的时候，却会自动拥有最高权限，并在执行完毕后退回权限。</p>
+<blockquote>
+<p><img src="http://ww4.sinaimg.cn/large/c1ee5447gw1ep1qbrnms4j20ho00x3ys.jpg" srcset="/img/loading.gif"></p>
+</blockquote>
+<p>可以看到权限rw后面多了一个s，这个就是suid/sgid的标记。<br>suid意味着如果某个用户对文件设置了该标记，那么其他用户执行该文件时，会自动拥有属主的权限，guid同理，执行时拥有属主的组权限。<br>如果希望设置suid，那么就将相应的权限位之前的那一位设置为4；如果希望设置guid，那么就将相应的权限位之前的那一位设置为2；如果希望两者都置位，那么将相应的权限位之前的那一位设置为4+2。一旦设置了这一位，一个 s将出现在x的位置上。记住：在设置suid或guid的同时，相应的执行权限位必须要被设置。例如，如果希望设置 guid，那么必须要让该用户组具有执行权限,否则的话，大写S将会出现在x位置上面。</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2015/02/10/linux%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86%EF%BC%882%EF%BC%89/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">linux权限管理（2）</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2015/01/31/ndk%E7%BC%96%E8%AF%91Argument-list-too-long%E9%94%99%E8%AF%AF/">
+                        <span class="hidden-mobile">ndk编译Argument list too long错误</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.0/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

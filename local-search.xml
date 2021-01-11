@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+  
+  
+  <entry>
+    <title>C IO(格式化输入输出)</title>
+    <link href="/2015/02/14/C-IO-%E6%A0%BC%E5%BC%8F%E5%8C%96%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/"/>
+    <url>/2015/02/14/C-IO-%E6%A0%BC%E5%BC%8F%E5%8C%96%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/</url>
+    
+    <content type="html"><![CDATA[<h2 id="INPUT"><a href="#INPUT" class="headerlink" title="INPUT"></a>INPUT</h2><pre><code>int printf ( const char * format, ... );</code></pre><p>格式化输出格式如下：</p><pre><code>%[flags][width][.precision][length]specifier</code></pre><p>一些比较实用的标记：</p><pre><code>   flags：- 左对齐，默认为右对齐   + 显示正负号，默认只显示负号   +    # 显示前缀标记，如和0x结合使用，输出会在数值前面加上0x   0 当指定输出width时，默认以空格填充，0指示以0 填充   width： 指定输出的有效位。</code></pre> <a id="more"></a><p><img src="http://ww2.sinaimg.cn/large/c1ee5447gw1ep9967u5fmj20hj09y0tt.jpg"><br>specifier： p 接收一个指针，并打印其地址</p><p>一个注意的地方:<br>由于整数和浮点数存储机制不同，以下调用会输出错误的值：</p><pre><code>printf(&quot;%d&quot;,23.0);//输出为0</code></pre><p>int fprintf ( FILE * stream, const char * format, … )<br>和printf相似，只不过输出有stdout变成了流</p><pre><code>int sprintf ( char * str, const char * format, ... );int snprintf ( char * s, size_t n, const char * format, ... );//c11 added</code></pre><p>输出定向为字符串，与snprintf相比，sprintf需要给str预留足够的空间，建议使用snprintf</p><pre><code>int vprintf ( const char * format, va_list arg );</code></pre><p>输出va_list类型的参数到stdout，与printf的原理相同，<br>讲一下什么是参数列表va_list（下面属于扯淡）</p><p>如printf的原型 int printf ( const char * format, … );<br>有时候我们编写函数的时候，有可能你事先并不知道需要传递传递多少个参数，C允许我们用…代表未知个数的参数，<br>它有可能是空的，或者1个或者多个参数。那么我们怎么知道到底有多少个参数，每个参数的类型是什么，答案是格式化字符串。<br>就是我们平时使用的诸如“%d %f %c”，从字符串中，我们知道，…应该总共有三个参数，一个int ，一个float，一个char<br>当然也有可能还有第三个或者更多参数，也或者，第一个根本不是int，这属于使用者传参错误的情况，应该避免。<br>标准库提供了方法获取每个参数的方法，但是其参数个数及类型还是需要你去分析。<br>下面是个例子：</p><pre><code>#include &lt;stdio.h&gt; /* printf */#include &lt;stdarg.h&gt;     /* va_list, va_start, va_arg, va_end */int FindMax (int n, ...)&#123;  int i,val,largest;  va_list vl;  va_start(vl,n);  largest=va_arg(vl,int);  for (i=1;i&lt;n;i++)  &#123;    val=va_arg(vl,int);    largest=(largest&gt;val)?largest:val;  &#125;  va_end(vl);  return largest;&#125;int main ()&#123;  int m;  m= FindMax (7,702,422,631,834,892,104,772);  printf (&quot;The largest value is: %d\n&quot;,m);  return 0;&#125;</code></pre><p>上面FindMax第一个参数是7，简化了从format string中分析参数个数的步骤，而参数全部为int简化了分析参数类型。<br>更近一步，看看va_list 和va_start va_end是个什么东东，<br>下面是这些东东在x86下面的一个实现</p><pre><code>typedef char * va_list;   #define _INTSIZEOF(n) \   ((sizeof(n)+sizeof(int)-1)&amp;~(sizeof(int) - 1) )   #define va_start(ap,v) ( ap = (va_list)&amp;v + _INTSIZEOF(v) )   #define va_arg(ap,t) \   ( *(t *)((ap += _INTSIZEOF(t)) - _INTSIZEOF(t)) )   #define va_end(ap) ( ap = (va_list)0 ) </code></pre><p>_INTSIZEOF 是将n以int对齐的算式，x86以int对齐。<br> 回到程序，调用va_start (args, format)后，则args指向了format之后的地址，va_start相当于初始化args，<br>va_arg 从args中取出t类型的数据。代码比较简单，<br>va_end将args赋为NULL。</p><p>int vfprintf ( FILE * stream, const char * format, va_list arg );<br>与vprintf的区别是输出为文件。</p><p>int vsprintf (char * s, const char * format, va_list arg );<br>输出到字符串，s需要有足够的大小。</p><p>int vsnprintf (char * s, size_t n, const char * format, va_list arg );//c11<br>vsprintf 的安全版</p><h2 id="OUTPUT"><a href="#OUTPUT" class="headerlink" title="OUTPUT"></a>OUTPUT</h2><pre><code>int scanf ( const char * format, ... );</code></pre><p>从stdin读取格式化输入。需要注意的是scanf以键盘\n结束输入，以空格分割token。</p><pre><code>int fscanf ( FILE * stream, const char * format, ... );</code></pre><p>从文件中获取格式化字符串。</p><pre><code>int sscanf ( const char * s, const char * format, ...);</code></pre><p>从字符串中获取。</p><pre><code>int vscanf ( const char * format, va_list arg );//c11int vsscanf ( const char * s, const char * format, va_list arg );//c11int vfscanf ( FILE * stream, const char * format, va_list arg );/c11</code></pre><p>作用类似，只不过格式化数据来源不同，分别为stdin，字符串，文件。</p>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>C IO(一般性)</title>
+    <link href="/2015/02/14/C-IO-%E4%B8%80%E8%88%AC%E6%80%A7/"/>
+    <url>/2015/02/14/C-IO-%E4%B8%80%E8%88%AC%E6%80%A7/</url>
+    
+    <content type="html"><![CDATA[<h2 id="input"><a href="#input" class="headerlink" title="input"></a>input</h2><pre><code>int fgetc ( FILE * stream ); int getc ( FILE * stream );int getchar ( void ); </code></pre><p><strong>fgetc</strong> 返回文件指针当前指定的字符，内部文件pos指向下一个字符。如果流到达了文件结果，函数将返回EOF（一般定义为-1，而字符类型是unsigned char，所以只能用int接收）</p><a id="more"></a><p><strong>getc</strong>与<strong>fgetc</strong>作用一样，区别在于getc有可能实现为宏，因此，如果需要获得高效率，优先使用<strong>getc</strong>，如果需要传递文件指针，使用fgetc，因为宏是无法获取指针的。<br>getchar 文档定义为</p><blockquote><p>It is equivalent to calling getc with stdin as argument</p></blockquote><p>你也可以认为他是这样实现的</p><pre><code>int getchar ( void )&#123;    return getc(stdin);&#125;</code></pre><p>需要注意的是，这三个方法是运行于行缓冲模式的。行缓冲的输入结束判定为：要么行缓冲已满，要么遇到回车符。<br>而且这些函数不对内容进行处理，意思就是说当你键入1个字符并回车的时候，缓冲区里面其实是有两个字符的，一个是你输入的字符，一个是回车，回车是不会被丢弃的，在<br>下一次调用获取字符函数的时候，会当作字符返回。所以如果要获得你想要的输入，应该调用一个额外的getc丢弃回车符。（组织好差）</p><pre><code>char * fgets ( char * str, int num, FILE * stream );char * gets ( char * str )</code></pre><p><strong>fgets</strong>从<strong>stream</strong>中获取字符，并在一下任一情况发生时停止：<br>1.读到新行<br>2.读完num-1个字符<br>3.读到文件结尾<br>并会设置地num个字符为\0.<br> 也就是说fgets也是行缓冲的，也会遇到下面这种情况</p><p>myfile.txt</p><p>**<strong><strong><strong>****</strong></strong></strong></p><p>12345678<br>test</p><p>**<strong><strong><strong>****</strong></strong></strong></p><p>myfile.txt共有两行。<br>test.c</p><pre><code>#include &lt;cstdio&gt;#include &lt;cstdlib&gt;int main ()&#123;      FILE * file = fopen(&quot;myfile.txt&quot;,&quot;r&quot;);      char content[9];       fgets(content,9,file);      printf(&quot;%s&quot;,content);       fgets(content,9,file);       printf(&quot;%s&quot;,content);     system(&quot;pause&quot;);     return 0;&#125;</code></pre><p>输出为：</p><blockquote><p>12345678</p></blockquote><blockquote><p>请按任意键继续. . .</p></blockquote><p>也就是第二次只会读取一个回车换行。<br>gets和fgets区别较大：</p><ol><li><p>gets是从stdin读取</p></li><li><p>gets虽然也是遇到回车换行停止读取，但是它不会把回车换行放入读取的字符串中</p></li><li><p>没有指定str的长度。</p></li></ol><p>第三点可能造成str的溢出，曾经被haker利用过。c11已经移除gets并用gets_s取代了gets<br>gets_s原型如下：</p><pre><code>char*gets_s(char*str, rsize_t n );size_t fread ( void * ptr, size_t size, size_t count, FILE * stream );</code></pre><p>fread是基于全缓冲的，也就不会说遇到换行就结束读取之类的。</p><h2 id="output"><a href="#output" class="headerlink" title="output"></a>output</h2><pre><code>int fputc ( int character, FILE * stream );int putc ( int character, FILE * stream );int putchar ( int character );</code></pre><p>这几个方法没有什么好讲的，和输入不同，没有额外的限制。putc也是可能实现为宏。</p><pre><code>int fputs ( const char * str, FILE * stream );int puts ( const char * str );</code></pre><p>这两个函数的区别在于fputs不会将\0输出。而puts会在str后面自动加一个\n</p><pre><code>size_t fwrite ( const void * ptr, size_t size, size_t count, FILE * stream );</code></pre><p>buffer 是一个指针，指向要写入文件中的信息快。count的值指出要写多少项。返回写入项的数目，这个值永远等于count，除非操作失败。</p>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>exec系列函数记忆</title>
+    <link href="/2015/02/14/exec%E7%B3%BB%E5%88%97%E5%87%BD%E6%95%B0%E8%AE%B0%E5%BF%86/"/>
+    <url>/2015/02/14/exec%E7%B3%BB%E5%88%97%E5%87%BD%E6%95%B0%E8%AE%B0%E5%BF%86/</url>
+    
+    <content type="html"><![CDATA[<p>最近看到了exec系列函数，由于相似函数有6个，于是总结了每个函数的寓意方便记忆。</p><p>6个函数分别如下：</p><pre><code>int execl(const char *path, const char *arg, ...);int execlp(const char *file, const char *arg, ...);int execle(const char *path, const char *arg, const char *envp[]);int execv(const char *path, const char *argv[]);int execve(const char *path, const char *argv[], const char *envp[];int execvp(const char *file, const char *argv[]);</code></pre><a id="more"></a><p>可以看到exec函数以参数形式的不同分为两类：</p><p>以exec+l+[pe ]组成。</p><p>以exec+v+[pe ]组成。</p><p>字母l的意思是该函数接收C可变参数列表形式的参数，如</p><pre><code>execl(&quot;/bin/echo&quot;, &quot;echo&quot;, &quot;executed by execl&quot;, NULL)</code></pre><p>字母v的意思是该函数接收一个指向以NULL结尾的数组的指针作为参数列表，如</p><pre><code>char *argv_execv[]=&#123;&quot;echo&quot;, &quot;excuted by execv&quot;, NULL&#125;;execv(&quot;/bin/echo&quot;, argv_execv)</code></pre><p>字母p的意思是允许函数接收一个可执行文件名，程序将从执行环境中查找，<br>而如果没有p的话，函数第一个参数需为一个绝对路径的可执行文件。</p><p>字母e的意思是接收一个环境变量数组作为额外参数。其内容格式为</p><pre><code>VARIABLE=value,</code></pre><p>如</p><pre><code>char *envp[]=&#123;&quot;PATH=/tmp&quot;, &quot;USER=lei&quot;, &quot;STATUS=testing&quot;, NULL&#125;;</code></pre><p>注意参数列表的最后一个值都是以NULL结尾的。    </p>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>二维指针与const</title>
+    <link href="/2015/02/14/%E4%BA%8C%E7%BB%B4%E6%8C%87%E9%92%88%E4%B8%8Econst/"/>
+    <url>/2015/02/14/%E4%BA%8C%E7%BB%B4%E6%8C%87%E9%92%88%E4%B8%8Econst/</url>
+    
+    <content type="html"><![CDATA[<p>关于一维指针的用法，很多资料都有</p><p>int  integer=0;</p><p>const int * pointer = &a;</p><p>常量指针，指针指向地址所对应的的内容不可改变 ,即不可进行这个操作：</p><p>*pointer = 1;</p><p>int * const  pointer = &a;</p><p>指针常量，pointer本身是个常量，即意味着</p><p>int b; pointer = &b;是不允许的。</p><p>const位置主要是以*号前后为标准的。</p><a id="more"></a> <p>但是在二维指针当中，情况有些变化，其中规则就是：<br>仅当只有一层间接关系（指针指向基本数据类型）时，才可以将非const地址或者指针赋值给const指针。也就是说：</p><p>const ** p;</p><p>int * p1;</p><p>const int value=0;</p><p>p = &p1;//这步是不允许的</p><p>刚才说了，只有一级指针时，才允许将非const地址赋值给const指针，而p是二级指针。<br>如果允许赋值会发生以下情况：<br> p=&p1;</p><p> *p = &amp;value//都是const类型</p><p> *p1 = 10;</p><p>则指针p1可以修改const value类型了，这显然是不可以的。</p>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>C++默认构造函数的构建</title>
+    <link href="/2015/02/14/C++%E9%BB%98%E8%AE%A4%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E7%9A%84%E6%9E%84%E5%BB%BA/"/>
+    <url>/2015/02/14/C++%E9%BB%98%E8%AE%A4%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E7%9A%84%E6%9E%84%E5%BB%BA/</url>
+    
+    <content type="html"><![CDATA[<p>C++新手学习的时候经常会有两个误区：</p><p>如果类没有构造函数，编译器会自动添加一个默认构造函数。<br>编译器合成出来的默认构造函数会初始化类数据成员。</p><a id="more"></a><p>编译器并非总是会合成默认构造函数的。根据C++文档的说明：</p><p>如果没有任何用户定义的构造函数，那么会有一个默认构造函数会被暗中声明出来。</p><p>但是合成的默认构造函数是分为trivial和nontrivial 的，trivial的其实就是没有添加，只是在概念上拥有一个tirvial构造函数。nontirivial的才是真正做实事的。当一个类没有任何构造函数时，默认构造函数会在以下4中情况下合成出来，也就是nontrivial构造函数（符合构造函数必定会被调用的C++语义）。</p><p>某个数据成员中带有默认构造函数。<br>继承于带有默认构造函数的基类。<br>以上两点容易理解，无论是成员量的还是继承的构造函数，C++保证会被调用，而这些工作只能放在类初始化的时候做，如果该类没有任何构造函数，则只能由编译器合成一个构造函数，并在其中插入调用该数据成员构造函数的代码。</p><p>带有virtual 函数的类<br>存在虚函数分为两种情况，一种是类申明虚函数，一个是派生链中存在虚函数。</p><p>若要理解为何会有默认构造函数合成，首先要理解虚函数的实现。</p><p>如果一个类中有虚函数，那么虚函数表会被生成出来，里面存放虚函数的地址。</p><p>在类中会安插一个指向虚表的指针，以便实现C++的动态语义，而该指针的赋值是在构造函数中完成的，所以需要一个构造函数。</p><p>虚继承<br>钻石继承中，会在子类中合成一个指向基类的指针（参考钻石继承的原理），这种情况下也会合成默认构造函数。</p>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>C++浮点数简述一：模型</title>
+    <link href="/2015/02/14/C&amp;C++%E6%B5%AE%E7%82%B9%E6%95%B0%E7%AE%80%E8%BF%B0%E4%B8%80%EF%BC%9A%E6%A8%A1%E5%9E%8B/"/>
+    <url>/2015/02/14/C&amp;C++%E6%B5%AE%E7%82%B9%E6%95%B0%E7%AE%80%E8%BF%B0%E4%B8%80%EF%BC%9A%E6%A8%A1%E5%9E%8B/</url>
+    
+    <content type="html"><![CDATA[<p>c/c++采用IEEE表示法存储浮点类型，公式为：</p><p><img src="http://ww2.sinaimg.cn/large/c1ee5447gw1ep98igee9ij202o00pjr6.jpg"></p><p>其中：<br>s是符号位，决定正数（0）还是负数（-1），数值为0的数字符号位做特殊处理。<br>M是二进制有效数。<br>E是2的幂，作用是对2进制加权。<br>那么在C中，存储格式如下：</p><p><img src="http://ww3.sinaimg.cn/large/c1ee5447gw1ep98kkgbm7j20i3047jrq.jpg"></p><a id="more"></a><p>而根据 E的值的不同浮点数的表示方法有一下三种：<br>规范化值：<br>E为无符号数，当E不是全 0或者全1 时，此时就是用于规范化表示。<br>E = e-bias，e 为k位， k为E 的位数， bias为<img src="http://ww3.sinaimg.cn/large/c1ee5447gw1ep98m4n20aj200s00g0sh.jpg"> ，由此确定，E的取值范围<br>对于单精度来说是 -126 - +127，双精度为-1022 - + 1023 。<br>M=f+1（0&lt;=f&lt;1 ）,即二进制值为<img src="http://ww1.sinaimg.cn/large/c1ee5447gw1ep98n026i3j202m00lq2q.jpg"> ,需要注意的是 隐含的1 ，因为我们总是能够调节指数，使 1&lt;=M&lt;2，那么小数第一位肯定是 1，而这个1 我们就不用显示的表示它了，这样可以获得额外一位。<br>非规范化值：<br> 当指数E 二进制位全 0时，所表现的数就是非规范化形式的，这种情况下指数值为 E=1-bias，<br>而M=f，此时 1不被隐含。因为规格化时有一个隐含的 1，所以不能表示0，而规范化值可以表示 0。+0和负0在IEEE标准中是是不一样的，但是C库是不区分的，但有个例外：1/负0结果是负无穷，而1/正0结果是正无穷。正0和负0比较是一样的。我觉得C库应该是在0参与的运算当中是区分正负的，但是直接比较0时，是不区分的。这里使用1-bias 是为了从非规范化值向规范化值的平滑转换，非规范化值的最大表示恰巧是规范化值的最小表示，此时转换，我们只需要将 e转为1 ，再加上一个隐含 1就可以完成。<br>特殊值：<br>当指数值 E为全1 ，M全为 0时，表示的值是无穷，当 s为0 时，表示的是正无穷，当 s为1 时，表示的是负无穷，当小数值不为 0时，结果为NaN ，即不是一个数，如求 -1的开根。<br>具体的IEEE标准可以参看<a href="http://zh.wikipedia.org/wiki/IEEE_754">wiki文档</a></p>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>通过引用C++多态</title>
+    <link href="/2015/02/14/%E9%80%9A%E8%BF%87%E5%BC%95%E7%94%A8C++%E5%A4%9A%E6%80%81/"/>
+    <url>/2015/02/14/%E9%80%9A%E8%BF%87%E5%BC%95%E7%94%A8C++%E5%A4%9A%E6%80%81/</url>
+    
+    <content type="html"><![CDATA[<p> 一般的大家的印象中要实现对象的多态调用,必须用指针来实现，其实引用也可以实现相同的效果。看下面的例子：</p><pre><code>#include &lt;iostream\&gt;#include &lt;cstdio\&gt;class Object &#123;  std::string type_name;protected:  explicit Object(std::string const&amp; type\_name) : type\_name(type\_name) &#123;&#125;;public:  Object() : type\_name(&quot;Object&quot;) &#123;&#125;;  Object(Object const &amp;other) : type\_name(other.type\_name) &#123;&#125;;  virtual void print() &#123; std::cout &lt;&lt; type\_name; &#125;;  virtual ~Object() &#123;&#125;;&#125;;</code></pre><a id="more"></a>   <pre><code>class Door : public Object &#123;  std::string handle;public:  Door() : Object(&quot;Door&quot;), handle(&quot;normal&quot;) &#123;&#125;  explicit Door(std::string const &amp;handle) : Object(&quot;Door&quot;), handle(handle) &#123;&#125;  Door(Door const &amp;other) : Object(other), handle(other.handle) &#123;&#125;  virtual void print() &#123; Object::print(); std::cout &lt;&lt; &quot; &quot; &lt;&lt; handle &lt;&lt; std::endl; &#125;  virtual ~Door() &#123;&#125;&#125;;class Book : public Object &#123;  std::string title;  std::string author;public:  Book() : Object(&quot;Book&quot;), title(), author() &#123;&#125;  Book(std::string author, std::string title) : Object(&quot;Book&quot;), title(title), author(author) &#123;&#125;  Book(Book const &amp;other) : Object(other), title(other.title), author(other.author) &#123;&#125;  virtual void print() &#123; Object::print(); std::cout &lt;&lt; &quot; &quot; &lt;&lt; title &lt;&lt; &quot; by &quot; &lt;&lt; author &lt;&lt; std::endl; &#125;  virtual ~Book() &#123;&#125;&#125;;void print(Object&amp; object) &#123;  object.print();&#125;int main(int argc, const char * argv[])&#123;  Object object;  Door door(&quot;simple&quot;);  Book book(&quot;program&quot;, &quot;C++&quot;);  print(object);  std::cout &lt;&lt; std::endl;  print(door);  print(book);  system(&quot;pause&quot;);&#125;</code></pre><p>可以猜下输出应该是什么，我在dev C++下编译通过，输出如下：</p><blockquote><p>Object</p></blockquote><blockquote><p>Door simple</p></blockquote><blockquote><p>Book C++ by program</p></blockquote><p>原理还是比较简单的，主要是理解引用底层是怎么实现的。</p><p>C++ 文档只规定了引用该实现什么样的功能，却没有说明怎么实现，在底层引用其实是根据const 指针来塑模的，列如</p><p> int &amp; r = i;<br>在背后的实现可能为</p><p>int * const ptr = &i;<br>然后</p><p>r = 9;<br>等价于</p><p>*ptr = 9;<br>所以说引用也可以实现相同的多态功能。这也解释了引用的特性。</p>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>linux权限管理（2）</title>
+    <link href="/2015/02/10/linux%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86%EF%BC%882%EF%BC%89/"/>
+    <url>/2015/02/10/linux%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86%EF%BC%882%EF%BC%89/</url>
+    
+    <content type="html"><![CDATA[]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>linux权限管理 （1）</title>
+    <link href="/2015/02/09/linux%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86%EF%BC%881%EF%BC%89/"/>
+    <url>/2015/02/09/linux%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86%EF%BC%881%EF%BC%89/</url>
+    
+    <content type="html"><![CDATA[<h1 id="linux权限管理"><a href="#linux权限管理" class="headerlink" title="linux权限管理"></a>linux权限管理</h1><p>由于现在在开发移动OA的本地沙箱，恰恰又对文件权限这块了解的不多，所以总结下linux权限管理，以备不时之需,权限管理又分为传统管理和扩展管理，该篇先介绍传统管理。<br>##初识权限管理<br>文件被创建它的用户和用户所属组拥有，文件的属主可以设置谁拥有读，写，执行权限，根用户则可以改变任何普通用户的设置。文件一经创建，便可以设定读，写，执行，这三种权限。<br>针对所使用的用户，权限管理又分为三类</p><ul><li>文件属主</li><li>同组用户</li><li>其他用户，不属于属组用户所在组的用户<a id="more"></a></li></ul><p>可以通过ls命令查看文件或文件夹的权限。</p><p><img src="http://ww3.sinaimg.cn/large/c1ee5447gw1ep14tdm59cj20c400yt8v.jpg"></p><p>我们关注的是 <strong>-rw-r–r–</strong> ，’-‘代表的是文件类型，</p><ol><li>‘-‘代表的文件类型是普通文件，linux支持的文件类型有7种：<blockquote><p>d 目录。</p></blockquote></li></ol><blockquote><p>l 符号链接(指向另一个文件)。</p><p>s 套接字文件。</p><p>b 块设备文件。</p><p>c 字符设备文件。</p><p>p 命名管道文件。</p><p>- 普通文件，或者更准确地说，不属于以上几种类型的文件。</p></blockquote><p>后面9位份分别对应9个权限位，9个权限位可以分为3组，即前面提到的三种类型：</p><ul><li>rw-:文件属组权限，r为读，w为写，-为执行权限的占位符，意味着没有执行权限。</li><li>r–：中间3位，文件组权限，读，后面两位占位，没有写，执行权限</li><li>r–： 最后三位，其他用户只有读权限</li></ul><p>对于r，w，x权限需要区分文件文件夹来看</p><ol><li>对于文件来说，r是可以对文件内容进行读操作，w可以对文件内容进行更改，x则是可以对文件进行执行操作，也即意味着文件至少是一个可执行脚本。</li><li>对于文件夹来说，r是可以读取文件夹中的文件/文件夹名称，也可以对该文件夹进行搜索。w可以在该文件夹中对文件/文件夹进行创建，删除，转移等操作，而x意味着可以进入该目录（作为工作目录），并且查看内容的权限标记。</li></ol><p>当我们创建文件的时候，系统会使用默认的权限对文件进行初始化，</p><p>可以运行umask命令查看该值：</p><p><img src="http://ww3.sinaimg.cn/large/c1ee5447gw1ep14u3pb5xj208b00twee.jpg"></p><p>umask值确定了文件创建时的缺省权限，umask修改的是/etc/profile的值，你也可以修改    ~/.profile中的值。</p><p>对于文件来说，后面三个数的最大值为6，文件默认没有执行权限，而目录最大值为7<br>mask值的计算方法是从最高权限中去除的权限，例如上面的默认022，创建文件时，默认权限为文件权限644，，目录则是755。</p><p>##权限操作命令<br>上面已经讲了可以通过 ls命令来查看文件的权限位。<br>你可以通过chmod命令来对已有权限进行更改，可以通过chown命令改变文件属主，也可以通过chgrp修改文件组。</p><p>chmod命令的一般格式为：<br>chmod [who] operator [permission] filename</p><p>who的含义是：</p><p>u 文件属主权限。</p><p>g 同组用户权限。</p><p>o 其他用户权限。</p><p>a 所有用户(文件属主、同组用户及其他用户)。</p><p>operator的含义：<br>+ 增加权限。</p><p>- 取消权限。</p><p>= 设定权限。</p><p>permission的含义：<br>r 读权限。</p><p>w 写权限。</p><p>x 执行权限<br>那么你可以通过下面的命令来对文件权限进行更改</p><p>chmod a-x myfile rw- rw- rw- 收回所有用户的执行权限</p><p>chmod og-w myfile rw- r– r- - 收回同组用户和其他用户的写权限</p><p>上面说的是符号模式，chmod也提供了另外一种模式，即绝对模式来修改，</p><p>chmod  [permisstion] filename</p><p>permisstion就是之前ls 看到的rw-r–r–的翻译，规则是三位一组，可以把rwx看成是一个<br>char x：3的域变量，r就是4，w为2，x为1，那么rw-r–r–翻译过来就是（4+2+0）(4+0+0)(4+0+0)=644.</p><p>这样你可以通过chmod 777 filename 这样的模式给全部用户赋予rwx权限。</p><p>chown命令用来更改文件属组，</p><p>chown user filename</p><p>chgrp可以用来改变文件组，因为一个用户是可以属于多个组的，你可以使用group命令来查看自己属于哪些组。</p><p>##suid/sgid<br>umask输出可以看到值是4位，第一位就是suid/sgid的组合，代表执行该脚本的用户可以拥有与文件属主或组相同的权限。例如，你用test用户登录，想运行passwd修改命令时，passwd命令需要修改/etc/pam.d/passwd （不同发行版本可能不尽相同）</p><blockquote><p>可以通过下面命令查看linux内核版本号：</p></blockquote><blockquote><p><img src="http://ww1.sinaimg.cn/large/c1ee5447gw1ep1q4jb91lj20hw01bwew.jpg"></p></blockquote><blockquote><p>也可以这样：</p></blockquote><blockquote><p><img src="http://ww2.sinaimg.cn/large/c1ee5447gw1ep1q59tnyij20hv01pgmb.jpg"></p></blockquote><blockquote><p>如果想看发行版本号，还可以通过 lsb_release命令查看，在符号lsb规范的众多linux发行版&gt;上可以使用，但也有一些例外，就像readhet，可以通过下面的命令查看</p></blockquote><blockquote><p><img src="http://ww1.sinaimg.cn/large/c1ee5447gw1ep1q71axo2j20hs02bwey.jpg"></p></blockquote><p>回到修改密码命令，可以知道操作密码文件的passwd工具是只能由root或具有root权限的用户修改的，但是管理员又不可能给每个用户开放开放最高权限，而这时，suid/guid就起作用了，即使你不是root用户，但是你在执行该文件的时候，却会自动拥有最高权限，并在执行完毕后退回权限。</p><blockquote><p><img src="http://ww4.sinaimg.cn/large/c1ee5447gw1ep1qbrnms4j20ho00x3ys.jpg"></p></blockquote><p>可以看到权限rw后面多了一个s，这个就是suid/sgid的标记。<br>suid意味着如果某个用户对文件设置了该标记，那么其他用户执行该文件时，会自动拥有属主的权限，guid同理，执行时拥有属主的组权限。<br>如果希望设置suid，那么就将相应的权限位之前的那一位设置为4；如果希望设置guid，那么就将相应的权限位之前的那一位设置为2；如果希望两者都置位，那么将相应的权限位之前的那一位设置为4+2。一旦设置了这一位，一个 s将出现在x的位置上。记住：在设置suid或guid的同时，相应的执行权限位必须要被设置。例如，如果希望设置 guid，那么必须要让该用户组具有执行权限,否则的话，大写S将会出现在x位置上面。</p>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>ndk编译Argument list too long错误</title>
+    <link href="/2015/01/31/ndk%E7%BC%96%E8%AF%91Argument-list-too-long%E9%94%99%E8%AF%AF/"/>
+    <url>/2015/01/31/ndk%E7%BC%96%E8%AF%91Argument-list-too-long%E9%94%99%E8%AF%AF/</url>
+    
+    <content type="html"><![CDATA[<h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><p>在项目中编译openssl的时候，发现报了下面这个错误:</p><blockquote><p>prebuilt/windows/bin/arm-linux-androideabi-ar: Argument list too long</p></blockquote><p>根本原因在 <strong>LOCAL_SRC_FILES</strong> 里面的文件太多导致该变量内容超过了ndk接受范围，可以打开ndk doc 查看下APPLICATION_MK.html看下具体原因</p><a id="more"></a><blockquote><p>LOCAL_SHORT_COMMANDS</p></blockquote><blockquote><p>Set this variable to ‘true’ when your module has a very high number of<br>sources and/or dependent static or shared libraries. This forces the<br>build system to use an intermediate list file, and use it with the<br>library archiver or static linker with the @$(listfile) syntax.</p></blockquote><blockquote><p>This can be useful on Windows, where the command-line only accepts<br>a maximum of <strong>8191</strong> characters, which can be too small for complex<br>projects.</p></blockquote><blockquote><p>This also impacts the compilation of individual source files, placing<br>nearly all compiler flags inside list files too.</p></blockquote><blockquote><p>Note that any other value than ‘true’ will revert to the default<br>behaviour. You can also define APP_SHORT_COMMANDS in your<br>Application.mk to force this behaviour for all modules in your<br>project.</p></blockquote><blockquote><p>NOTE: We do not recommend enabling this feature by default, since it makes the build slower.</p></blockquote><h2 id="解决方案"><a href="#解决方案" class="headerlink" title="#解决方案"></a>#解决方案</h2><p>可以看到对LOCAL_SHORT_COMMANDS 在windows下是有8191的长度限制的，有两中方案：</p><ul><li>切割target，编译多份.a，然后用ar命令将静态库和到一起。</li><li>使用 LOCAL_SHORT_COMMANDS编译选项，让ndk自己去切割编译，文中也提到了不推荐该做法，因为会影响编译速度。</li></ul><p>我使用的的openssl不会做过多的定制，编译一次就够了，所以也不在乎这点时间牺牲了，不过开启之后，速度确实变慢了很多，4核机器需要等好几分钟才开始正式编译。</p><p>也从网上看到了其他的人的解决方案，</p><blockquote><p>将其源文件按类型分开后，在赋值就ok了。比如A1 = xx1.cpp xx2.cpp …   A2 = xx3.cpp ,xx4.cpp … 等等。</p></blockquote><blockquote><p>最后LOCAL_SRC_FILES := $(A1) $(A2),这样编译就可以通过了。</p></blockquote><p>我试过了不行，感觉 LOCAL_SRC_FILES最终还是会张开成原来的长度。</p><h2 id="依然存在的问题"><a href="#依然存在的问题" class="headerlink" title="#依然存在的问题"></a>#依然存在的问题</h2><p>另外需要说明一点的是，ndkr7 上面使用这个命令虽然不会报错，但实际上是不起作用的，原因在于4.1.1 版本的下的<br>build/core/build-binary.mk这个文件是有bug的，</p><pre><code>LOCAL_SHORT_COMMANDS := $(strip $(LOCAL_SHORT_COMMANDS))ifndef LOCAL_SHORT_COMMANDSLOCAL_SHORT_COMMANDS := $(strip $(NDK_APP_SHORT_COMMANDS))endififeq ($(LOCAL_SHORT_COMMANDS)),true)</code></pre><p>可以看到最后一行ifeq的括号是不匹配的，导致if语句执行不到，你可以通过修改这个脚本，也可以通过省级到4.1.1之后的版本（查看源码发现4.1.1之后的版本是修复过的）。</p><h2 id="总结"><a href="#总结" class="headerlink" title="#总结"></a>#总结</h2><p>作为程序员不能怕麻烦，麻烦也就意味着成长，遇到问题的时候应该冷静思考，网上解决不了的时候，可以适当的查看一下源码最上面的一适配层是否出现了问题。</p>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>ios 符号表导出</title>
+    <link href="/2015/01/28/ios-%E7%AC%A6%E5%8F%B7%E8%A1%A8%E5%AF%BC%E5%87%BA/"/>
+    <url>/2015/01/28/ios-%E7%AC%A6%E5%8F%B7%E8%A1%A8%E5%AF%BC%E5%87%BA/</url>
+    
+    <content type="html"><![CDATA[<p> 前段时间项目中使用到了ios的符号表限制，在导出i386平台的符号表时，遇到了一些问题，ld命令提示objc符号被igored了。</p><a id="more"></a><p> 按照ios ld命令来看，静态库底层ABI版本已经由1到了2，具体从哪个sdk开始的没有了解过，但是可以用nm命令查看一下符号表导出，如果ojbc类前缀为 <strong>.objc_class_name_</strong> 的话，则为版本1，如果为**_OBJC_CLASS_$**的话，则是版本2，可以在apple开源代码中看到。</p><pre><code>if ( (strcmp(&amp;name[len-3], &quot;.eh&quot;) == 0) || (strncmp(name, &quot;.objc_category_name_&quot;, 20) == 0) ) &#123;    // never export .eh symbols    warning(&quot;ignoring %s in export list&quot;, name);&#125;else if ( (fArchitecture == CPU_TYPE_I386) &amp;&amp; !fObjCABIVersion2Override &amp;&amp; (strncmp(name, &quot;_OBJC_CLASS_$&quot;, 13) == 0) ) &#123;    warning(&quot;ignoring Objc2 Class symbol %s in i386 export list&quot;, name);    fRemovedExports.insert(name);&#125;else if ( alterObjC1ClassNamesToObjC2 &amp;&amp; (strncmp(name, &quot;.objc_class_name_&quot;, 17) == 0) ) &#123;    // linking ObjC2 ABI, but have ObjC1 ABI name in export list.  Change it to intended name    fRemovedExports.insert(name);    char* temp;    asprintf(&amp;temp, &quot;_OBJC_CLASS_$_%s&quot;, &amp;name[17]);    impliedExports.push_back(temp);    asprintf(&amp;temp, &quot;_OBJC_METACLASS_$_%s&quot;, &amp;name[17]);    impliedExports.push_back(temp);&#125;else &#123;    fInitialUndefines.push_back(name);&#125;</code></pre><p>如果要在i386下面导出版本2的符号表，也就是我现在使用的sdk7.X以上的版本，则需要在ld命令上加入 <strong>objc_abi_version</strong> 2 这个参数。如下：</p><blockquote><p>ld -r *.so -arch i386 -exported_symbols_list list_file -objc_abi_version 2 -o libtest.a</p></blockquote><p>感兴趣的可以查看 <a href="http://www.opensource.apple.com/source/ld64/ld64-85.2.1/FireOpal/src/Options.cpp">Options.cpp</a> 这个类深入研究下ld命令是如何解析命令的</p>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  
+</search>
